@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Contactos</title>
+    <link rel="stylesheet" href="styles.css" />
+    <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+
+<body>
+
+    <!-- ══════════════ TOP NAV ══════════════ -->
+    <header class="topnav">
+        <div class="topnav-left">
+            <div class="hs-logo">
+                <svg width="26" height="26" viewBox="0 0 60 60" fill="none">
+                    <circle cx="30" cy="30" r="30" fill="#ff7a59" />
+                    <path d="M22 20v12.5a7.5 7.5 0 1 0 7.5-7.5H22" stroke="#fff" stroke-width="4.5"
+                        stroke-linecap="round" />
+                </svg>
+            </div>
+            <nav class="top-menu">
+                <a href="#" class="top-link active">Contactos</a>
+            </nav>
+        </div>
+        <div class="topnav-center">
+            <div class="top-search">
+                <i class="fa fa-magnifying-glass"></i>
+                <input type="text" placeholder="Buscar contactos…" id="globalSearch" />
+            </div>
+        </div>
+        <div class="topnav-right">
+            <button class="icon-btn" title="Ayuda"><i class="fa fa-circle-question"></i></button>
+            <button class="icon-btn" title="Configuración"><i class="fa fa-gear"></i></button>
+            <button class="icon-btn" title="Notificaciones"><i class="fa fa-bell"></i><span
+                    class="badge">3</span></button>
+            <div class="avatar-wrap">
+                <div class="avatar">C</div>
+                <span class="portal-name">Mis Contactos</span>
+                <i class="fa fa-chevron-down tiny"></i>
+            </div>
+        </div>
+    </header>
+
+    <!-- ══════════════ LAYOUT ══════════════ -->
+    <div class="layout">
+
+        <!-- Side Rail -->
+        <aside class="sidenav">
+            <button class="sidenav-icon active" title="Contactos"><i class="fa fa-users"></i></button>
+            <div style="flex:1"></div>
+            <button class="sidenav-icon" title="Perfil"><i class="fa fa-circle-user"></i></button>
+        </aside>
+
+        <!-- Main -->
+        <main class="main-content">
+
+            <!-- Page header -->
+            <div class="page-header">
+                <div class="page-title-row">
+                    <h1 class="page-title">Contactos <i class="fa fa-chevron-down tiny ml4"></i></h1>
+                    <span class="record-count" id="recordCount">5 registros</span>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-primary" id="btnCrearContacto"><i class="fa fa-plus"></i> Crear
+                        contacto</button>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+
+
+
+
+            <!-- Table -->
+            <div class="table-wrap">
+                <table id="contactsTable">
+                    <thead>
+                        <tr>
+                            <th class="col-check"><input type="checkbox" id="selectAll" onchange="toggleAll(this)" />
+                            </th>
+                            <th class="sortable" onclick="sortTable(0)">NOMBRE <i class="fa fa-sort"></i></th>
+                            <th class="sortable" onclick="sortTable(1)">NÚMERO DE TELÉFONO <i class="fa fa-sort"></i>
+                            </th>
+                            <th class="sortable" onclick="sortTable(2)">FECHA DE CREACIÓN (GMT-5) <i
+                                    class="fa fa-sort"></i></th>
+                            <th class="sortable" onclick="sortTable(3)">PROPIETARIO DEL CONTACTO <i
+                                    class="fa fa-sort"></i></th>
+                            <th class="sortable" onclick="sortTable(4)">ESTADO DEL LEAD <i class="fa fa-sort"></i></th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button class="page-btn" id="btnPrev" onclick="changePage(-1)">
+                    <i class="fa fa-chevron-left"></i> Anterior
+                </button>
+                <span class="page-indicator" id="pageIndicator">1</span>
+                <button class="page-btn" id="btnNext" onclick="changePage(1)">
+                    Siguiente <i class="fa fa-chevron-right"></i>
+                </button>
+                <div class="per-page">
+                    <select id="perPageSelect" onchange="changePerPage()">
+                        <option value="5" selected>5 por página</option>
+                        <option value="10">10 por página</option>
+                        <option value="25">25 por página</option>
+                        <option value="50">50 por página</option>
+                    </select>
+                    <i class="fa fa-chevron-down tiny"></i>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ══════════════ MODAL: Crear Contacto ══════════════ -->
+    <div class="modal-overlay" id="modalCrear">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>Crear contacto</h2>
+                <button class="modal-close" onclick="closeModal('modalCrear')"><i class="fa fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Nombre *</label>
+                        <input type="text" id="newFirstName" placeholder="Nombre" />
+                    </div>
+                    <div class="form-group">
+                        <label>Apellido *</label>
+                        <input type="text" id="newLastName" placeholder="Apellido" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Correo electrónico</label>
+                    <input type="email" id="newEmail" placeholder="email@ejemplo.com" />
+                </div>
+                <div class="form-group">
+                    <label>Teléfono</label>
+                    <input type="tel" id="newPhone" placeholder="+1 (555) 000-0000" />
+                </div>
+                <div class="form-group">
+                    <label>Propietario</label>
+                    <select id="newOwner">
+                        <option>Carlos López</option>
+                        <option>Ana Torres</option>
+                        <option>Miguel Soto</option>
+                        <option>Laura Gómez</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Estado del lead</label>
+                    <select id="newStatus">
+                        <option value="En curso">En curso</option>
+                        <option value="Nuevo">Nuevo</option>
+                        <option value="Abierto">Abierto</option>
+                        <option value="Ganado">Ganado</option>
+                        <option value="Perdido">Perdido</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-ghost" onclick="closeModal('modalCrear')">Cancelar</button>
+                <button class="btn btn-primary" onclick="createContact()">Crear contacto</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════ MODAL: Detalle Contacto ══════════════ -->
+    <div class="modal-overlay" id="modalDetalle">
+        <div class="modal modal-lg">
+            <div class="modal-header">
+                <h2 id="detalleNombre">Contacto</h2>
+                <button class="modal-close" onclick="closeModal('modalDetalle')"><i class="fa fa-xmark"></i></button>
+            </div>
+            <div class="modal-body detail-body">
+                <div class="detail-avatar" id="detalleAvatar"></div>
+                <div class="detail-grid">
+                    <div class="detail-item"><span class="detail-label">Correo</span><span id="detalleEmail">—</span>
+                    </div>
+                    <div class="detail-item"><span class="detail-label">Teléfono</span><span
+                            id="detalleTelefono">—</span></div>
+                    <div class="detail-item"><span class="detail-label">Propietario</span><span
+                            id="detallePropietario">—</span></div>
+                    <div class="detail-item"><span class="detail-label">Estado del lead</span><span
+                            id="detalleEstado">—</span></div>
+                    <div class="detail-item"><span class="detail-label">Fecha de creación</span><span
+                            id="detalleFecha">—</span></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-danger" id="btnToggleStatusDetalle">Inactivar contacto</button>
+                <button class="btn btn-ghost" onclick="closeModal('modalDetalle')">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="app.js"></script>
+</body>
+
+</html>
