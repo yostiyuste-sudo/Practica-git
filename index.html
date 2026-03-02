@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Contactos</title>
+    <title>Gestión de Contactos - CRM</title>
     <link rel="stylesheet" href="styles.css" />
     <link href="https://fonts.googleapis.com/css2?family=Lexend:wght@300;400;500;600;700&display=swap"
         rel="stylesheet" />
@@ -13,7 +13,6 @@
 
 <body>
 
-    <!-- ══════════════ TOP NAV ══════════════ -->
     <header class="topnav">
         <div class="topnav-left">
             <div class="hs-logo">
@@ -24,81 +23,60 @@
                 </svg>
             </div>
             <nav class="top-menu">
-                <a href="#" class="top-link active">Contactos</a>
+                <a href="#" class="top-link active">Gestión de Contactos</a>
             </nav>
         </div>
-        <div class="topnav-center">
-            <div class="top-search">
-                <i class="fa fa-magnifying-glass"></i>
-                <input type="text" placeholder="Buscar contactos…" id="globalSearch" />
-            </div>
-        </div>
         <div class="topnav-right">
-            <button class="icon-btn" title="Ayuda"><i class="fa fa-circle-question"></i></button>
-            <button class="icon-btn" title="Configuración"><i class="fa fa-gear"></i></button>
-            <button class="icon-btn" title="Notificaciones"><i class="fa fa-bell"></i><span
-                    class="badge">3</span></button>
             <div class="avatar-wrap">
-                <div class="avatar">C</div>
-                <span class="portal-name">Mis Contactos</span>
-                <i class="fa fa-chevron-down tiny"></i>
+                <div class="avatar">U</div>
+                <span class="portal-name">Admin Sistema</span>
             </div>
         </div>
     </header>
 
-    <!-- ══════════════ LAYOUT ══════════════ -->
     <div class="layout">
-
-        <!-- Side Rail -->
         <aside class="sidenav">
             <button class="sidenav-icon active" title="Contactos"><i class="fa fa-users"></i></button>
-            <div style="flex:1"></div>
-            <button class="sidenav-icon" title="Perfil"><i class="fa fa-circle-user"></i></button>
         </aside>
 
-        <!-- Main -->
         <main class="main-content">
-
-            <!-- Page header -->
             <div class="page-header">
                 <div class="page-title-row">
-                    <h1 class="page-title">Contactos <i class="fa fa-chevron-down tiny ml4"></i></h1>
-                    <span class="record-count" id="recordCount">5 registros</span>
+                    <h1 class="page-title">Directorio de Contactos</h1>
+                    <span class="record-count" id="recordCount">0 registros</span>
                 </div>
-                <div class="page-actions">
-                    <button class="btn btn-primary" id="btnCrearContacto"><i class="fa fa-plus"></i> Crear
-                        contacto</button>
+
+                <div class="page-actions-row">
+                    <div class="filter-group">
+                        <label class="switch-wrap">
+                            <input type="checkbox" id="filterActiveOnly" checked onchange="renderTable()">
+                            <span class="switch-toggle"></span>
+                            <span class="switch-label">Solo Activos</span>
+                        </label>
+                    </div>
+                    <button class="btn btn-primary" id="btnNuevoContacto">
+                        <i class="fa fa-plus"></i> Registrar Contacto
+                    </button>
                 </div>
             </div>
 
-            <!-- Tabs -->
-
-
-
-
-            <!-- Table -->
             <div class="table-wrap">
                 <table id="contactsTable">
                     <thead>
                         <tr>
-                            <th class="col-check"><input type="checkbox" id="selectAll" onchange="toggleAll(this)" />
-                            </th>
                             <th class="sortable" onclick="sortTable(0)">NOMBRE <i class="fa fa-sort"></i></th>
-                            <th class="sortable" onclick="sortTable(1)">NÚMERO DE TELÉFONO <i class="fa fa-sort"></i>
+                            <th class="sortable" onclick="sortTable(1)">ENTIDAD <i class="fa fa-sort"></i></th>
+                            <th class="sortable" onclick="sortTable(2)">MEDIO DE CONTACTO <i class="fa fa-sort"></i>
                             </th>
-                            <th class="sortable" onclick="sortTable(2)">FECHA DE CREACIÓN (GMT-5) <i
-                                    class="fa fa-sort"></i></th>
-                            <th class="sortable" onclick="sortTable(3)">PROPIETARIO DEL CONTACTO <i
-                                    class="fa fa-sort"></i></th>
-                            <th class="sortable" onclick="sortTable(4)">ESTADO DEL LEAD <i class="fa fa-sort"></i></th>
-                            <th></th>
+                            <th class="sortable" onclick="sortTable(3)">ESTADO <i class="fa fa-sort"></i></th>
+                            <th class="sortable" onclick="sortTable(4)">REGISTRO <i class="fa fa-sort"></i></th>
+                            <th>ACCIONES</th>
                         </tr>
                     </thead>
                     <tbody id="tableBody"></tbody>
                 </table>
             </div>
 
-            <!-- Pagination -->
             <div class="pagination">
                 <button class="page-btn" id="btnPrev" onclick="changePage(-1)">
                     <i class="fa fa-chevron-left"></i> Anterior
@@ -107,103 +85,59 @@
                 <button class="page-btn" id="btnNext" onclick="changePage(1)">
                     Siguiente <i class="fa fa-chevron-right"></i>
                 </button>
-                <div class="per-page">
-                    <select id="perPageSelect" onchange="changePerPage()">
-                        <option value="5" selected>5 por página</option>
-                        <option value="10">10 por página</option>
-                        <option value="25">25 por página</option>
-                        <option value="50">50 por página</option>
-                    </select>
-                    <i class="fa fa-chevron-down tiny"></i>
-                </div>
             </div>
-
         </main>
     </div>
 
-    <!-- ══════════════ MODAL: Crear Contacto ══════════════ -->
-    <div class="modal-overlay" id="modalCrear">
+    <!-- MODAL REGISTRO -->
+    <div class="modal-overlay" id="modalContacto">
         <div class="modal">
             <div class="modal-header">
-                <h2>Crear contacto</h2>
-                <button class="modal-close" onclick="closeModal('modalCrear')"><i class="fa fa-xmark"></i></button>
+                <h2 id="modalTitle">Nuevo Contacto</h2>
+                <button class="modal-close" onclick="closeModal('modalContacto')"><i class="fa fa-xmark"></i></button>
             </div>
             <div class="modal-body">
-                <div class="form-row">
+                <form id="contactForm">
+                    <input type="hidden" id="editId">
                     <div class="form-group">
-                        <label>Nombre *</label>
-                        <input type="text" id="newFirstName" placeholder="Nombre" />
+                        <label>Nombre Completo <span class="required">*</span></label>
+                        <input type="text" id="contactName" placeholder="Nombre y Apellido" required>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Entidad <span class="required">*</span></label>
+                            <select id="contactEntity">
+                                <option value="Cliente">Cliente</option>
+                                <option value="Proveedor">Proveedor</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Estado Inicial</label>
+                            <select id="contactStatus">
+                                <option value="ACTIVO">ACTIVO</option>
+                                <option value="INACTIVO">INACTIVO</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="info-note">
+                        <i class="fa fa-info-circle"></i> Debe ingresar correo o teléfono.
                     </div>
                     <div class="form-group">
-                        <label>Apellido *</label>
-                        <input type="text" id="newLastName" placeholder="Apellido" />
+                        <label>Correo Electrónico</label>
+                        <input type="email" id="contactEmail" placeholder="ejemplo@correo.com">
                     </div>
-                </div>
-                <div class="form-group">
-                    <label>Correo electrónico</label>
-                    <input type="email" id="newEmail" placeholder="email@ejemplo.com" />
-                </div>
-                <div class="form-group">
-                    <label>Teléfono</label>
-                    <input type="tel" id="newPhone" placeholder="+1 (555) 000-0000" />
-                </div>
-                <div class="form-group">
-                    <label>Propietario</label>
-                    <select id="newOwner">
-                        <option>Carlos López</option>
-                        <option>Ana Torres</option>
-                        <option>Miguel Soto</option>
-                        <option>Laura Gómez</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Estado del lead</label>
-                    <select id="newStatus">
-                        <option value="En curso">En curso</option>
-                        <option value="Nuevo">Nuevo</option>
-                        <option value="Abierto">Abierto</option>
-                        <option value="Ganado">Ganado</option>
-                        <option value="Perdido">Perdido</option>
-                    </select>
-                </div>
+                    <div class="form-group">
+                        <label>Teléfono</label>
+                        <input type="tel" id="contactPhone" placeholder="+57 300 0000000">
+                    </div>
+                </form>
             </div>
             <div class="modal-footer">
-                <button class="btn btn-ghost" onclick="closeModal('modalCrear')">Cancelar</button>
-                <button class="btn btn-primary" onclick="createContact()">Crear contacto</button>
+                <button class="btn btn-ghost" onclick="closeModal('modalContacto')">Cancelar</button>
+                <button class="btn btn-primary" onclick="handleSaveContact()">Guardar</button>
             </div>
         </div>
     </div>
-
-    <!-- ══════════════ MODAL: Detalle Contacto ══════════════ -->
-    <div class="modal-overlay" id="modalDetalle">
-        <div class="modal modal-lg">
-            <div class="modal-header">
-                <h2 id="detalleNombre">Contacto</h2>
-                <button class="modal-close" onclick="closeModal('modalDetalle')"><i class="fa fa-xmark"></i></button>
-            </div>
-            <div class="modal-body detail-body">
-                <div class="detail-avatar" id="detalleAvatar"></div>
-                <div class="detail-grid">
-                    <div class="detail-item"><span class="detail-label">Correo</span><span id="detalleEmail">—</span>
-                    </div>
-                    <div class="detail-item"><span class="detail-label">Teléfono</span><span
-                            id="detalleTelefono">—</span></div>
-                    <div class="detail-item"><span class="detail-label">Propietario</span><span
-                            id="detallePropietario">—</span></div>
-                    <div class="detail-item"><span class="detail-label">Estado del lead</span><span
-                            id="detalleEstado">—</span></div>
-                    <div class="detail-item"><span class="detail-label">Fecha de creación</span><span
-                            id="detalleFecha">—</span></div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button class="btn btn-danger" id="btnToggleStatusDetalle">Inactivar contacto</button>
-                <button class="btn btn-ghost" onclick="closeModal('modalDetalle')">Cerrar</button>
-            </div>
-        </div>
-    </div>
-
-
 
     <script src="app.js"></script>
 </body>

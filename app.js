@@ -1,378 +1,211 @@
 /* ══════════════════════════════════════════
-   Contactos – app.js
+   Gestión de Contactos – app.js
 ══════════════════════════════════════════ */
 
-// ── DATA ──────────────────────────────────
-const AVATAR_COLORS = [
-  '#ff7a59', '#0091ae', '#6941e0', '#f59e0b',
-  '#10b981', '#e56db1', '#3b82f6', '#ef4444',
-];
-
+// ── DATA MODEL ──────────────────────────
 let contacts = [
-  { id: 1, nombre: 'Andrea Fernández', email: 'andrea.fernandez@email.com', phone: '+1 (555) 201-4432', created: '22 oct. de 2024 5:09 PM', owner: 'Carlos López', status: 'En curso', active: true },
-  { id: 2, nombre: 'Roberto Castillo', email: 'roberto.castillo@empresa.mx', phone: '+1 (555) 318-7720', created: '22 oct. de 2024 4:07 PM', owner: 'Ana Torres', status: 'En curso', active: true },
-  { id: 3, nombre: 'Sandra Jiménez', email: 'sandra.jimenez@outlook.com', phone: '+1 (555) 442-9901', created: '22 oct. de 2024 3:52 PM', owner: 'Miguel Soto', status: 'En curso', active: true },
-  { id: 4, nombre: 'Felipe Morales', email: 'felipe.morales@gmail.com', phone: '+1 (555) 187-3344', created: '12 may. de 2022 12:56 PM', owner: 'Laura Gómez', status: 'Nuevo', active: true },
-  { id: 5, nombre: 'Valentina Ríos', email: 'val.rios@corporativa.co', phone: '+1 (555) 563-0087', created: '11 may. de 2022 12:35 PM', owner: 'Carlos López', status: 'Nuevo', active: true },
+  { id: 1, nombre: 'Ana García', entidad: 'Cliente', email: 'ana@ejemplo.com', phone: '3001234567', estado: 'ACTIVO', registro: '2024-03-01 10:00 AM' },
+  { id: 2, nombre: 'Luis Martínez', entidad: 'Proveedor', email: 'luis@proveedor.com', phone: '', estado: 'INACTIVO', registro: '2024-02-28 09:15 AM' }
 ];
 
-let nextId = 6;
-let filteredContacts = [...contacts];
+let nextId = 3;
+let filteredContacts = [];
 let currentPage = 1;
-let perPage = 5;
+let perPage = 10;
 let sortCol = -1;
 let sortAsc = true;
 
-
-// ── INIT ──────────────────────────────────
+// ── INITIALIZATION ───────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  initEvents();
   renderTable();
-  bindViewToggle();
-  bindCrearBtn();
-  // Global search in topnav filters the table
-  const globalSearch = document.getElementById('globalSearch');
-  if (globalSearch) {
-    globalSearch.addEventListener('input', () => {
-      currentPage = 1;
-      renderTable();
-    });
-  }
 });
 
-// ── AVATAR ────────────────────────────────
-function avatarColor(name) {
-  let h = 0;
-  for (let c of name) h = (h * 31 + c.charCodeAt(0)) & 0xffff;
-  return AVATAR_COLORS[h % AVATAR_COLORS.length];
-}
-function initials(name) {
-  return name.split(' ').slice(0, 2).map(w => w[0].toUpperCase()).join('');
+function initEvents() {
+  document.getElementById('btnNuevoContacto').addEventListener('click', () => {
+    setupModalForCreate();
+    openModal('modalContacto');
+  });
 }
 
-// ── STATUS BADGE ──────────────────────────
-function statusClass(status) {
-  const map = {
-    'En curso': 'en-curso', 'Nuevo': 'nuevo',
-    'Abierto': 'abierto', 'Ganado': 'ganado', 'Perdido': 'perdido',
-  };
-  return 'status-badge status-' + (map[status] || 'nuevo');
-}
-
-// ── RENDER TABLE ──────────────────────────
+// ── RENDER TABLE ─────────────────────────
 function renderTable() {
-  applyFilters();
+  applyLogicFilters();
   const body = document.getElementById('tableBody');
   const start = (currentPage - 1) * perPage;
-  const page = filteredContacts.slice(start, start + perPage);
+  const pageData = filteredContacts.slice(start, start + perPage);
 
-  body.innerHTML = page.length ? page.map(c => `
-    <tr onclick="openDetalle(${c.id})" style="${c.active ? '' : 'opacity: 0.6; background: #f1f5f9;'}">
-      <td class="col-check" onclick="event.stopPropagation()">
-        <input type="checkbox" class="row-cb" data-id="${c.id}" onchange="updateSelectAll()"/>
-      </td>
-      <td>
-        <div class="contact-cell">
-          <div class="contact-avatar" style="background:${avatarColor(c.nombre)}">${initials(c.nombre)}</div>
-          <div>
-            <div class="contact-name">${c.nombre}</div>
-            <div class="contact-email">${c.email}</div>
-          </div>
-        </div>
-      </td>
-      <td>${c.phone}</td>
-      <td>${c.created}</td>
-      <td>${c.owner}</td>
-      <td><span class="${statusClass(c.status)}">${c.status}</span></td>
-      <td>
-        <div class="action-cell" onclick="event.stopPropagation()">
-          <button class="row-action" title="Ver detalle" onclick="openDetalle(${c.id})">
-            <i class="fa fa-eye"></i>
-          </button>
-          <button class="row-action" title="Editar" onclick="editContact(${c.id})">
-            <i class="fa fa-pen"></i>
-          </button>
-          <button class="row-action ${c.active ? '' : 'danger'}" title="${c.active ? 'Inactivar' : 'Activar'}" onclick="toggleContactStatus(${c.id})">
-            <i class="fa ${c.active ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
-          </button>
-        </div>
-      </td>
-    </tr>
-  `).join('') : `
-    <tr>
-      <td colspan="7" style="text-align:center;padding:40px;color:#94a3b8;">
-        <i class="fa fa-users" style="font-size:2rem;margin-bottom:8px;display:block"></i>
-        No se encontraron contactos
-      </td>
-    </tr>`;
+  body.innerHTML = pageData.length ? pageData.map(c => `
+        <tr class="${c.estado === 'INACTIVO' ? 'row-inactive' : ''}">
+            <td>
+                <div class="contact-cell">
+                    <div class="avatar-sm" style="background:${getAvatarColor(c.nombre)}">${getInitials(c.nombre)}</div>
+                    <span>${c.nombre}</span>
+                </div>
+            </td>
+            <td><span class="entity-pill">${c.entidad}</span></td>
+            <td>
+                <div class="contact-methods">
+                    ${c.email ? `<div class="subtext"><i class="fa fa-envelope tiny"></i> ${c.email}</div>` : ''}
+                    ${c.phone ? `<div class="subtext"><i class="fa fa-phone tiny"></i> ${c.phone}</div>` : ''}
+                </div>
+            </td>
+            <td><span class="status-badge ${c.estado.toLowerCase()}">${c.estado}</span></td>
+            <td class="subtext">${c.registro}</td>
+            <td>
+                <div class="actions">
+                    <button class="action-btn" onclick="setupModalForEdit(${c.id})" title="Editar"><i class="fa fa-pen"></i></button>
+                    <button class="action-btn ${c.estado === 'ACTIVO' ? 'danger' : 'success'}" onclick="toggleStatus(${c.id})" title="${c.estado === 'ACTIVO' ? 'Inactivar' : 'Activar'}">
+                        <i class="fa ${c.estado === 'ACTIVO' ? 'fa-toggle-on' : 'fa-toggle-off'}"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>
+    `).join('') : `<tr><td colspan="6" class="empty-state">No se hallaron contactos que coincidan con la vista.</td></tr>`;
 
-  updatePagination();
-  updateRecordCount();
+  updateUI();
 }
 
-// ── FILTERS ───────────────────────────────
-function applyFilters() {
-  const q = (document.getElementById('globalSearch')?.value || '').toLowerCase();
-  let list = [...contacts];
+// Subtarea: "Implementar backend..." (Validaciones y Filtrado)
+function applyLogicFilters() {
+  const onlyActive = document.getElementById('filterActiveOnly').checked;
 
-  if (q) {
-    list = list.filter(c =>
-      c.nombre.toLowerCase().includes(q) ||
-      c.email.toLowerCase().includes(q) ||
-      c.phone.includes(q)
-    );
+  // Criterio de Aceptación 3: Solo se muestran activos por defecto
+  let list = [...contacts];
+  if (onlyActive) {
+    list = list.filter(c => c.estado === 'ACTIVO');
   }
 
+  // Ordenar si aplica
   if (sortCol >= 0) {
-    const keys = ['nombre', 'phone', 'created', 'owner', 'status'];
+    const keys = ['nombre', 'entidad', 'email', 'estado', 'registro'];
+    const key = keys[sortCol];
     list.sort((a, b) => {
-      const av = Object.values(a)[sortCol + 1] || '';
-      const bv = Object.values(b)[sortCol + 1] || '';
-      return sortAsc
-        ? av.toString().localeCompare(bv.toString())
-        : bv.toString().localeCompare(av.toString());
+      const vA = a[key] || '';
+      const vB = b[key] || '';
+      return sortAsc ? vA.localeCompare(vB) : vB.localeCompare(vA);
     });
   }
 
   filteredContacts = list;
 }
 
+// ── CRUD LOGIC ─────────────────────────────
+function handleSaveContact() {
+  const id = document.getElementById('editId').value;
+  const nombre = document.getElementById('contactName').value.trim();
+  const entidad = document.getElementById('contactEntity').value;
+  const email = document.getElementById('contactEmail').value.trim();
+  const phone = document.getElementById('contactPhone').value.trim();
+  const estado = document.getElementById('contactStatus').value;
 
+  // Criterio de Aceptación 1: Nombre y al menos un medio obligatorios
+  if (!nombre) return showToast('El nombre es obligatorio', 'error');
+  if (!email && !phone) return showToast('Debe ingresar un correo o un teléfono', 'error');
 
-// ── SORT ─────────────────────────────────
-function sortTable(col) {
-  if (sortCol === col) sortAsc = !sortAsc;
-  else { sortCol = col; sortAsc = true; }
-  currentPage = 1;
+  // Criterio de Aceptación 2: No duplicados por correo en la misma entidad
+  if (email) {
+    const isDuplicate = contacts.some(c =>
+      c.email.toLowerCase() === email.toLowerCase() &&
+      c.entidad === entidad &&
+      c.id != id
+    );
+    if (isDuplicate) return showToast(`Ya existe un contacto con ese correo en ${entidad}`, 'error');
+  }
+
+  const now = new Date().toLocaleString();
+
+  if (id) {
+    // Editar
+    const idx = contacts.findIndex(c => c.id == id);
+    contacts[idx] = { ...contacts[idx], nombre, entidad, email, phone, estado };
+    showToast('Contacto actualizado', 'success');
+  } else {
+    // Crear
+    contacts.unshift({
+      id: nextId++,
+      nombre, entidad, email, phone, estado,
+      registro: now
+    });
+    showToast('Contacto registrado', 'success');
+  }
+
+  closeModal('modalContacto');
   renderTable();
-
-  document.querySelectorAll('th.sortable i').forEach((icon, i) => {
-    icon.className = i === col
-      ? (sortAsc ? 'fa fa-sort-up' : 'fa fa-sort-down')
-      : 'fa fa-sort';
-  });
 }
 
-// ── PAGINATION ───────────────────────────
-function updatePagination() {
-  const total = filteredContacts.length;
-  const pages = Math.max(1, Math.ceil(total / perPage));
-  if (currentPage > pages) currentPage = pages;
+function toggleStatus(id) {
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  c.estado = (c.estado === 'ACTIVO' ? 'INACTIVO' : 'ACTIVO');
+  renderTable();
+  showToast(`Contacto ${c.estado === 'ACTIVO' ? 'activado' : 'inactivado'}`, 'info');
+}
+
+// ── HELPERS ────────────────────────────────
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+function setupModalForCreate() {
+  document.getElementById('modalTitle').textContent = 'Registrar Contacto';
+  document.getElementById('editId').value = '';
+  document.getElementById('contactForm').reset();
+  document.getElementById('contactStatus').value = 'ACTIVO';
+}
+
+function setupModalForEdit(id) {
+  const c = contacts.find(x => x.id === id);
+  if (!c) return;
+  document.getElementById('modalTitle').textContent = 'Editar Contacto';
+  document.getElementById('editId').value = c.id;
+  document.getElementById('contactName').value = c.nombre;
+  document.getElementById('contactEntity').value = c.entidad;
+  document.getElementById('contactStatus').value = c.estado;
+  document.getElementById('contactEmail').value = c.email;
+  document.getElementById('contactPhone').value = c.phone;
+  openModal('modalContacto');
+}
+
+function updateUI() {
+  document.getElementById('recordCount').textContent = `${filteredContacts.length} registros`;
   document.getElementById('pageIndicator').textContent = currentPage;
+  const pages = Math.ceil(filteredContacts.length / perPage) || 1;
   document.getElementById('btnPrev').disabled = currentPage <= 1;
   document.getElementById('btnNext').disabled = currentPage >= pages;
 }
 
 function changePage(dir) {
-  const pages = Math.ceil(filteredContacts.length / perPage);
+  const pages = Math.ceil(filteredContacts.length / perPage) || 1;
   currentPage = Math.min(Math.max(1, currentPage + dir), pages);
   renderTable();
 }
 
-function changePerPage() {
-  perPage = parseInt(document.getElementById('perPageSelect').value);
+function sortTable(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
   currentPage = 1;
   renderTable();
 }
 
-function updateRecordCount() {
-  document.getElementById('recordCount').textContent =
-    `${filteredContacts.length} registro${filteredContacts.length !== 1 ? 's' : ''}`;
+function getAvatarColor(name) {
+  const colors = ['#ff7a59', '#6941e0', '#0091ae', '#f59e0b', '#10b981'];
+  let h = 0;
+  for (let i = 0; i < name.length; i++) h = (h * 31 + name.charCodeAt(i)) & 0xFFFF;
+  return colors[h % colors.length];
 }
 
-// ── SELECT ALL ───────────────────────────
-function toggleAll(masterCb) {
-  document.querySelectorAll('.row-cb').forEach(cb => cb.checked = masterCb.checked);
-}
-function updateSelectAll() {
-  const cbs = document.querySelectorAll('.row-cb');
-  const all = [...cbs].every(cb => cb.checked);
-  document.getElementById('selectAll').checked = all && cbs.length > 0;
+function getInitials(name) {
+  return name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 }
 
-
-
-// ── VIEW TOGGLE ──────────────────────────
-function bindViewToggle() {
-  document.querySelectorAll('.vtoggle').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.vtoggle').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      const title = btn.title;
-      if (title !== 'Lista') showToast(`Vista "${title}" no disponible en este plan`, 'info');
-    });
-  });
-}
-
-
-
-// ── CREAR CONTACTO ───────────────────────
-function bindCrearBtn() {
-  document.getElementById('btnCrearContacto')
-    .addEventListener('click', () => openModal('modalCrear'));
-}
-
-function createContact() {
-  const fn = document.getElementById('newFirstName').value.trim();
-  const ln = document.getElementById('newLastName').value.trim();
-  if (!fn || !ln) {
-    showToast('Por favor ingresa nombre y apellido', 'error'); return;
-  }
-  const now = new Date();
-  const dateStr = now.toLocaleDateString('es-MX', { day: 'numeric', month: 'short', year: 'numeric' }) +
-    ' ' + now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-  contacts.unshift({
-    id: nextId++,
-    nombre: `${fn} ${ln}`,
-    email: document.getElementById('newEmail').value.trim() || '—',
-    phone: document.getElementById('newPhone').value.trim() || '—',
-    created: dateStr,
-    owner: document.getElementById('newOwner').value,
-    status: document.getElementById('newStatus').value,
-    active: true,
-  });
-  closeModal('modalCrear');
-  clearForm(['newFirstName', 'newLastName', 'newEmail', 'newPhone']);
-  currentPage = 1;
-  renderTable();
-  showToast('Contacto creado correctamente', 'success');
-}
-
-function clearForm(ids) {
-  ids.forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.value = '';
-  });
-}
-
-// ── DETALLE ───────────────────────────────
-function openDetalle(id) {
-  const c = contacts.find(x => x.id === id);
-  if (!c) return;
-  document.getElementById('detalleNombre').textContent = c.nombre;
-  document.getElementById('detalleEmail').textContent = c.email;
-  document.getElementById('detalleTelefono').textContent = c.phone;
-  document.getElementById('detallePropietario').textContent = c.owner;
-  document.getElementById('detalleEstado').textContent = c.status;
-  document.getElementById('detalleFecha').textContent = c.created;
-  const av = document.getElementById('detalleAvatar');
-  av.textContent = initials(c.nombre);
-  av.style.background = avatarColor(c.nombre);
-  const btnAccion = document.getElementById('btnToggleStatusDetalle');
-  btnAccion.textContent = c.active ? 'Inactivar contacto' : 'Activar contacto';
-  btnAccion.className = c.active ? 'btn btn-danger' : 'btn btn-success';
-  btnAccion.onclick = () => {
-    toggleContactStatus(id);
-    closeModal('modalDetalle');
-  };
-  openModal('modalDetalle');
-}
-
-// ── EDITAR ────────────────────────────────
-function editContact(id) {
-  const c = contacts.find(x => x.id === id);
-  if (!c) return;
-  const [fn, ...lnArr] = c.nombre.split(' ');
-  document.getElementById('newFirstName').value = fn;
-  document.getElementById('newLastName').value = lnArr.join(' ');
-  document.getElementById('newEmail').value = c.email !== '—' ? c.email : '';
-  document.getElementById('newPhone').value = c.phone !== '—' ? c.phone : '';
-  document.getElementById('newOwner').value = c.owner;
-  document.getElementById('newStatus').value = c.status;
-
-  // swap button to "Guardar"
-  const footer = document.querySelector('#modalCrear .modal-footer');
-  const oldBtn = footer.querySelector('.btn-primary');
-  const newBtn = oldBtn.cloneNode(true);
-  newBtn.textContent = 'Guardar cambios';
-  newBtn.onclick = () => saveEdit(id);
-  oldBtn.replaceWith(newBtn);
-
-  document.querySelector('#modalCrear .modal-header h2').textContent = 'Editar contacto';
-  openModal('modalCrear');
-}
-
-function saveEdit(id) {
-  const fn = document.getElementById('newFirstName').value.trim();
-  const ln = document.getElementById('newLastName').value.trim();
-  if (!fn || !ln) { showToast('Por favor ingresa nombre y apellido', 'error'); return; }
-  const idx = contacts.findIndex(x => x.id === id);
-  if (idx < 0) return;
-  contacts[idx] = {
-    ...contacts[idx],
-    nombre: `${fn} ${ln}`,
-    email: document.getElementById('newEmail').value.trim() || '—',
-    phone: document.getElementById('newPhone').value.trim() || '—',
-    owner: document.getElementById('newOwner').value,
-    status: document.getElementById('newStatus').value,
-  };
-  closeModal('modalCrear');
-  renderTable();
-  showToast('Contacto actualizado', 'success');
-}
-
-// ── ACTIVAR/INACTIVAR ────────────────────
-function toggleContactStatus(id) {
-  const c = contacts.find(x => x.id === id);
-  if (!c) return;
-  c.active = !c.active;
-  renderTable();
-  showToast(`Contacto ${c.active ? 'activado' : 'inactivado'} correctamente`, 'success');
-}
-
-
-
-
-
-
-
-
-
-
-
-function showCopilot(e, id) { /* handled by delegate above */ }
-
-// ── MODALS ───────────────────────────────
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  // reset crear modal header/btn if it was in edit mode
-  if (id === 'modalCrear') {
-    document.querySelector('#modalCrear .modal-header h2').textContent = 'Crear contacto';
-    const footer = document.querySelector('#modalCrear .modal-footer');
-    const btn = footer.querySelector('.btn-primary');
-    btn.textContent = 'Crear contacto';
-    btn.onclick = createContact;
-    clearForm(['newFirstName', 'newLastName', 'newEmail', 'newPhone']);
-  }
-}
-
-// close modal on overlay click
-document.querySelectorAll('.modal-overlay').forEach(overlay => {
-  overlay.addEventListener('click', e => {
-    if (e.target === overlay) closeModal(overlay.id);
-  });
-});
-
-// ── TOAST ────────────────────────────────
 function showToast(msg, type = 'info') {
-  let container = document.querySelector('.toast-container');
-  if (!container) {
-    container = document.createElement('div');
-    container.className = 'toast-container';
-    document.body.appendChild(container);
-  }
-  const icons = { success: 'fa-circle-check', error: 'fa-circle-exclamation', info: 'fa-circle-info' };
-  const toast = document.createElement('div');
-  toast.className = `toast ${type}`;
-  toast.innerHTML = `<i class="fa ${icons[type] || icons.info}"></i> ${msg}`;
-  container.appendChild(toast);
+  const t = document.createElement('div');
+  t.className = `toast-mini ${type}`;
+  t.innerHTML = `<i class="fa ${type === 'success' ? 'fa-check-circle' : 'fa-circle-info'}"></i> ${msg}`;
+  document.body.appendChild(t);
+  setTimeout(() => t.classList.add('show'), 10);
   setTimeout(() => {
-    toast.style.animation = 'none';
-    toast.style.opacity = '0';
-    toast.style.transform = 'translateX(120%)';
-    toast.style.transition = 'all .3s ease';
-    setTimeout(() => toast.remove(), 300);
+    t.classList.remove('show');
+    setTimeout(() => t.remove(), 300);
   }, 3000);
 }
